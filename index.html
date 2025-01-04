@@ -44,76 +44,43 @@
 
     <script>
         async function fetchLocationData() {
-            console.log("Fetching location data from ip-api...");
+            console.log("Fetching location data from ipgeolocation.io...");
             try {
-                // Secure API request
-                const response = await fetch("https://ip-api.com/json/");
+                const apiKey = "6075594600db4cf68174888fab05e274"; // Your API Key
+                const response = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`);
                 if (response.ok) {
                     const data = await response.json();
                     console.log("Location data fetched successfully:", data);
                     alert("Location data fetched successfully.");
-                    return data;
+                    return {
+                        query: data.ip || "Unavailable",
+                        city: data.city || "Unavailable",
+                        regionName: data.state_prov || "Unavailable",
+                        country: data.country_name || "Unavailable",
+                        lat: data.latitude || "Unavailable",
+                        lon: data.longitude || "Unavailable",
+                        isp: data.isp || "Unavailable",
+                        timezone: data.timezone || "Unavailable",
+                    };
                 } else {
-                    console.error("ip-api request failed, attempting backup method.");
-                    alert("ip-api request failed. Attempting backup geolocation...");
-                    return fetchGeolocationFallback();
+                    console.error("ipgeolocation.io request failed.");
+                    alert("ipgeolocation.io request failed.");
+                    throw new Error("ipgeolocation.io request failed.");
                 }
             } catch (error) {
-                console.error("Error fetching location from ip-api:", error);
-                alert("Error with ip-api. Using fallback geolocation.");
-                return fetchGeolocationFallback();
+                console.error("Error fetching location data:", error);
+                alert("Error fetching location data.");
+                return {
+                    query: "Unavailable",
+                    city: "Unavailable",
+                    regionName: "Unavailable",
+                    country: "Unavailable",
+                    lat: "Unavailable",
+                    lon: "Unavailable",
+                    isp: "Unavailable",
+                    timezone: "Unavailable",
+                };
             }
-        }
-
-        function fetchGeolocationFallback() {
-            return new Promise((resolve) => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const { latitude, longitude } = position.coords;
-                            console.log("Geolocation Fallback Successful:", latitude, longitude);
-                            alert("Geolocation Fallback Successful.");
-                            resolve({
-                                query: "Unavailable",
-                                city: "Geolocation Fallback",
-                                regionName: "Unavailable",
-                                country: "Unavailable",
-                                lat: latitude,
-                                lon: longitude,
-                                isp: "Unavailable",
-                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                            });
-                        },
-                        (error) => {
-                            console.error("Geolocation Fallback Error:", error);
-                            alert("Geolocation Fallback Failed.");
-                            resolve({
-                                query: "Unavailable",
-                                city: "Unavailable",
-                                regionName: "Unavailable",
-                                country: "Unavailable",
-                                lat: "Unavailable",
-                                lon: "Unavailable",
-                                isp: "Unavailable",
-                                timezone: "Unavailable",
-                            });
-                        }
-                    );
-                } else {
-                    console.error("Geolocation API not supported.");
-                    alert("Geolocation API not supported.");
-                    resolve({
-                        query: "Unavailable",
-                        city: "Unavailable",
-                        regionName: "Unavailable",
-                        country: "Unavailable",
-                        lat: "Unavailable",
-                        lon: "Unavailable",
-                        isp: "Unavailable",
-                        timezone: "Unavailable",
-                    });
-                }
-            });
         }
 
         async function sendVisitorInfo() {
